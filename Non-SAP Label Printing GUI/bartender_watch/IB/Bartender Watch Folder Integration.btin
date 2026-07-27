@@ -1,0 +1,133 @@
+﻿<IntegrationFile Version="10" ID="605ed278-76e0-4c30-9348-512961b88a61">
+  <ActionGroup ID="50bde8ae-5005-493a-8a98-c721231d7bd9" RunMethod="Sequential" MessagingEnabled="false">
+    <Actions>
+      <FileTriggerIntegration Name="Bartender Watch" IgnoreErrors="true" ID="d4a3aabd-522f-481f-ac55-576272734804" PollingInterval="2000" MultipleServerScanning="true" Filter="*.csv" DetectionAction="Delete" DetectionExtension="ok" FailureAction="Move">
+        <ActionGroup ID="90adaf19-0574-469b-9d76-671d40d1251f" RunMethod="Sequential" MessagingEnabled="false">
+          <Actions>
+            <TransformTextToRecordSetAction Name="Transform Text To Record Set" IgnoreErrors="false" ID="cade685d-391c-4871-bbcf-9f9a2a653a44">
+              <ConnectionInfo>&lt;?xml version="1.0" encoding="utf-8"?&gt;&#xD;
+&lt;DatabaseSetup xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;&#xD;
+  &lt;DatabaseConnections&gt;&#xD;
+    &lt;DatabaseConnection Name="@1" Type="TextFile"&gt;codepage=20127;pathname=C:\bartender_watch\IB\Sample.csv;format=TabSeparated;field count=41;first record is header=True&lt;/DatabaseConnection&gt;&#xD;
+  &lt;/DatabaseConnections&gt;&#xD;
+  &lt;RecordSets&gt;&#xD;
+    &lt;RecordSet Name="Sample" Connection="@1" Primary="true"&gt;&#xD;
+      &lt;SelectCommand Custom="false"&gt;SELECT * FROM [Sample]&lt;/SelectCommand&gt;&#xD;
+      &lt;ProviderParameters&gt;&lt;/ProviderParameters&gt;&#xD;
+      &lt;LastKnownSchema&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[PRINTERNAME]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[LABELFILE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[MATNR]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[KTXT]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[WEDAT]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[EBELN]" Type="Decimal" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[EBELP]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[BSTMG]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[BSTME]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[LGPBE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[LGORT]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[CONSIGNEE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[CONSIGNEEADDRESS]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[WEIGHT]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[UNIT]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[EXPDAT]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[MUNDAT]" Type="Int32" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[QUALITY_EQUIPMENT_NO]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[INVENTORY_NUMBER]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[RRC_PART_NUMBER]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[DRAWING_LINK]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[TYPE_MODEL]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[MANUFACTURER]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[EQUIPMENT_DESCRIPTION]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[SERIAL_NUMBER]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[LOCATED_AREA]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[STATION_SHELF_NO]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[FUNCTION]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[RANGE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[ACCURACY]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[USED_FOR_TESTS]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[CALIBRATION_SCOPE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[PLANNED_CALIBRATION_DATE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[NEXT_CALIBRATION_DATE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[LASER_STATUS]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[CALIBRATION_STATUS]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[REMAINING_DAYS]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[REMARK]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[FILE_NAME]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[TYPE]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample].[Sample].[LINK]" Type="String" /&gt;&#xD;
+      &lt;/LastKnownSchema&gt;&#xD;
+    &lt;/RecordSet&gt;&#xD;
+  &lt;/RecordSets&gt;&#xD;
+&lt;/DatabaseSetup&gt;</ConnectionInfo>
+              <Text>
+                <Value>%EventData%</Value>
+              </Text>
+            </TransformTextToRecordSetAction>
+            <ForEachDatabaseRecordAction Name="For Each Database Record" ID="3956bd55-e7bb-4d0b-aff9-313ce7ce549d" RunMethod="Sequential" MessagingEnabled="false">
+              <Actions>
+                <PrintAction Name="Print Document" IgnoreErrors="false" ID="d88d888b-5394-46b2-87f9-1c95541b6bd6" Printer="%PRINTERNAME%">
+                  <DocumentFile Path="C:\bartender_watch\IB\%LABELFILE%">
+                    <FileSystem.System />
+                  </DocumentFile>
+                  <RecordSets Type="VariableName" DataSourceVariableName="CurrentRecord" />
+                  <PrintToFileFolder Path="%IntegrationFileNameWithoutExtension%">
+                    <FileSystem.Temporary />
+                  </PrintToFileFolder>
+                </PrintAction>
+              </Actions>
+              <RecordSet.DataTarget>
+                <Value>%EventData%</Value>
+              </RecordSet.DataTarget>
+            </ForEachDatabaseRecordAction>
+          </Actions>
+        </ActionGroup>
+        <ContentData ContentDataType="TextCSV" />
+        <ScanFolder Path="C:\bartender_watch">
+          <FileSystem.System />
+        </ScanFolder>
+        <MoveToFolder Path="C:\bartender_watch\OK">
+          <FileSystem.System />
+        </MoveToFolder>
+        <FailureMoveToFolder Path="C:\bartender_watch\Failed">
+          <FileSystem.System />
+        </FailureMoveToFolder>
+      </FileTriggerIntegration>
+    </Actions>
+  </ActionGroup>
+  <Metadata>
+    <Properties>
+      <Properties Name="MostRecentlyUsedVariables" Type="System.String">
+        <Value>CurrentRecord;EventData;"PRINTERNAME;Response</Value>
+      </Properties>
+      <Properties Name="SelectedDeploymentConfiguration" Type="System.String">
+        <Value>Custom</Value>
+      </Properties>
+      <Properties Name="SelectedIntegration" Type="System.Int32">
+        <Value>0</Value>
+      </Properties>
+      <Properties Name="SelectedOptionsPage" Type="System.String">
+        <Value>1;1;0</Value>
+      </Properties>
+    </Properties>
+  </Metadata>
+  <SourcePath>C:\bartender_watch\IB\Bartender Watch Folder Integration.btin</SourcePath>
+  <IsPrinting>false</IsPrinting>
+  <IsPrintPreview>false</IsPrintPreview>
+  <DeploymentConfigurations>
+    <DeploymentConfiguration CancelIfIntegrationFileExistsOnTargetServer="false">
+      <Name>Test</Name>
+      <TargetServers>
+        <TargetServer Name="This Computer" Description="" IsServerGroup="false" />
+      </TargetServers>
+      <DeploymentSchedule Method="Immediately" />
+    </DeploymentConfiguration>
+    <DeploymentConfiguration CancelIfIntegrationFileExistsOnTargetServer="false">
+      <Name>Production</Name>
+      <TargetServers>
+        <TargetServer Name="This Computer" Description="" IsServerGroup="false" />
+      </TargetServers>
+      <DeploymentSchedule Method="OnSpecifiedDate" />
+    </DeploymentConfiguration>
+  </DeploymentConfigurations>
+</IntegrationFile>

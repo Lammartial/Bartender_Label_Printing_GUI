@@ -1,0 +1,90 @@
+﻿<IntegrationFile Version="10" ID="092a5975-7eee-426c-a492-90763c46b471">
+  <ActionGroup ID="cb704203-b5db-4089-b5a5-8fc7066ee942" RunMethod="Sequential" MessagingEnabled="false">
+    <Actions>
+      <FileTriggerIntegration Name="Bartender Watch Static" IgnoreErrors="true" ID="856a8aa5-5611-43a4-a032-e645fbdaefb5" PollingInterval="2000" MultipleServerScanning="true" Filter="*.csv" DetectionAction="Delete" DetectionExtension="txt" FailureAction="Move">
+        <ActionGroup ID="89362795-30ab-4be8-bfbc-6d8ce3fd1027" RunMethod="Sequential" MessagingEnabled="false">
+          <Actions>
+            <TransformTextToRecordSetAction Name="Transform Text To Record Set" IgnoreErrors="false" ID="72aab3fd-77ae-4f1c-9620-c2df9968aeac">
+              <ConnectionInfo>&lt;?xml version="1.0" encoding="utf-8"?&gt;&#xD;
+&lt;DatabaseSetup xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;&#xD;
+  &lt;DatabaseConnections&gt;&#xD;
+    &lt;DatabaseConnection Name="@1" Type="TextFile"&gt;codepage=20127;pathname=C:\bartender_watch\IB\Sample_static.csv;format=TabSeparated;field count=2;first record is header=True&lt;/DatabaseConnection&gt;&#xD;
+  &lt;/DatabaseConnections&gt;&#xD;
+  &lt;RecordSets&gt;&#xD;
+    &lt;RecordSet Name="Sample_static" Connection="@1" Primary="true"&gt;&#xD;
+      &lt;SelectCommand Custom="false"&gt;SELECT * FROM [Sample_static]&lt;/SelectCommand&gt;&#xD;
+      &lt;ProviderParameters&gt;&lt;/ProviderParameters&gt;&#xD;
+      &lt;LastKnownSchema&gt;&#xD;
+        &lt;Field Name="[Sample_static].[Sample_static].[PRINTERNAME]" Type="String" /&gt;&#xD;
+        &lt;Field Name="[Sample_static].[Sample_static].[LABELFILE]" Type="String" /&gt;&#xD;
+      &lt;/LastKnownSchema&gt;&#xD;
+    &lt;/RecordSet&gt;&#xD;
+  &lt;/RecordSets&gt;&#xD;
+&lt;/DatabaseSetup&gt;</ConnectionInfo>
+              <Text>
+                <Value>%EventData%</Value>
+              </Text>
+            </TransformTextToRecordSetAction>
+            <ForEachDatabaseRecordAction Name="For Each Database Record" ID="33b7605f-6ba4-4138-b8c4-6f60ee61c319" RunMethod="Sequential" MessagingEnabled="false">
+              <Actions>
+                <PrintAction Name="Print Document 2" IgnoreErrors="false" ID="b40e3e26-9726-4f00-a14e-5e31cd446587" Printer="%PRINTERNAME%">
+                  <DocumentFile Path="C:\bartender_watch\IB\%LABELFILE%">
+                    <FileSystem.System />
+                  </DocumentFile>
+                  <PrintToFileFolder Path="%IntegrationFileNameWithoutExtension%">
+                    <FileSystem.Temporary />
+                  </PrintToFileFolder>
+                </PrintAction>
+              </Actions>
+              <RecordSet.DataTarget>
+                <Value>%EventData%</Value>
+              </RecordSet.DataTarget>
+            </ForEachDatabaseRecordAction>
+          </Actions>
+        </ActionGroup>
+        <ContentData ContentDataType="TextCSV" />
+        <ScanFolder Path="C:\bartender_watch\Static">
+          <FileSystem.System />
+        </ScanFolder>
+        <FailureMoveToFolder Path="C:\bartender_watch\Failed">
+          <FileSystem.System />
+        </FailureMoveToFolder>
+      </FileTriggerIntegration>
+    </Actions>
+  </ActionGroup>
+  <Metadata>
+    <Properties>
+      <Properties Name="MostRecentlyUsedVariables" Type="System.String">
+        <Value>CurrentRecord;EventData</Value>
+      </Properties>
+      <Properties Name="SelectedDeploymentConfiguration" Type="System.String">
+        <Value>Custom</Value>
+      </Properties>
+      <Properties Name="SelectedIntegration" Type="System.Int32">
+        <Value>0</Value>
+      </Properties>
+      <Properties Name="SelectedOptionsPage" Type="System.String">
+        <Value>1;0</Value>
+      </Properties>
+    </Properties>
+  </Metadata>
+  <SourcePath>C:\bartender_watch\IB\Bartender Watch Static Folder Integration.btin</SourcePath>
+  <IsPrinting>false</IsPrinting>
+  <IsPrintPreview>false</IsPrintPreview>
+  <DeploymentConfigurations>
+    <DeploymentConfiguration CancelIfIntegrationFileExistsOnTargetServer="false">
+      <Name>Test</Name>
+      <TargetServers>
+        <TargetServer Name="This Computer" Description="" IsServerGroup="false" />
+      </TargetServers>
+      <DeploymentSchedule Method="Immediately" />
+    </DeploymentConfiguration>
+    <DeploymentConfiguration CancelIfIntegrationFileExistsOnTargetServer="false">
+      <Name>Production</Name>
+      <TargetServers>
+        <TargetServer Name="This Computer" Description="" IsServerGroup="false" />
+      </TargetServers>
+      <DeploymentSchedule Method="OnSpecifiedDate" />
+    </DeploymentConfiguration>
+  </DeploymentConfigurations>
+</IntegrationFile>
