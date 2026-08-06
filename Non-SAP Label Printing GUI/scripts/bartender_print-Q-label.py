@@ -148,30 +148,30 @@ LOG_FILE = r"C:\bt_watchedfolder_qr_print\qr_print_log.csv"
 # in your BarTender BTW database connection.
 
 DATABASE_FIELDS = [
-    "QUALITY_EQUIPMENT_NO",
-    "INVENTORY_NUMBER",
-    "RRC_PART_NUMBER",
-    "DRAWING_LINK",
-    "TYPE_MODEL",
-    "MANUFACTURER",
-    "EQUIPMENT_DESCRIPTION",
-    "SERIAL_NUMBER",
-    "LOCATED_AREA",
-    "STATION_SHELF_NO",
-    "FUNCTION",
-    "RANGE",
-    "ACCURACY",
-    "USED_FOR_TESTS",
-    "CALIBRATION_SCOPE",
-    "PLANNED_CALIBRATION_DATE",
-    "NEXT_CALIBRATION_DATE",
-    "LASER_STATUS",
-    "CALIBRATION_STATUS",
-    "REMAINING_DAYS",
-    "REMARK",
-    "FILE_NAME",
-    "TYPE",
-    "LINK"
+    "QUALITY_EQUIPMENT_NO",   # "Mã số thiết bị Chất lượng[Q-ID]"
+    "INVENTORY_NUMBER",    # "Mã số tài sản[Inventory Number]"
+    "RRC_PART_NUMBER",       # RRC Part Number
+    "DRAWING_LINK",          # Drawing & Link
+    "TYPE_MODEL",            # Loại/ Mẫu mã (Type/ Model)
+    "MANUFACTURER",          # Nhà sản xuất[Manufacturer]
+    "EQUIPMENT_DESCRIPTION",  # Mô tả thiết bị[Equipment Description]
+    "SERIAL_NUMBER",          # Số sê-ri[Serial Number]
+    "LOCATED_AREA",          # Vị trí[Located Area]
+    "STATION_SHELF_NO",      # Trạm/ Tủ[Station/ Shelf No.]
+    "FUNCTION",              # Chức năng[Function]
+    "RANGE",                 # Khoảng đo[Range]
+    "ACCURACY",              # Độ chính xác[Accuracy (% of reading + % of range)]
+    "USED_FOR_TESTS",        # Đang được sủ dụng? []
+    "CALIBRATION_SCOPE",     # Phạm vi hiệu chuẩn []
+    "PLANNED_CALIBRATION_DATE",   # Ngày hiệu chuẩn - Kế hoạch 
+    "NEXT_CALIBRATION_DATE",      # Ngày hiệu chuẩn kế tiếp
+    "LASER_STATUS",               # Trạng thái laser []
+    "CALIBRATION_STATUS",         # Trạng thái hiệu chuẩn[Calibration Status]
+    "REMAINING_DAYS",         # Thời gian còn lại[]
+    "REMARK",                 # Ghi chú
+    "FILE_NAME",              # Tên tệp
+    "TYPE",                   # Kiểu
+    "LINK"                    # Link
 ]
 
 # Final CSV/TSV header.

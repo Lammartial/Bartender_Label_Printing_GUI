@@ -1,5 +1,7 @@
 import os
 import csv
+import re
+import urllib.request
 from datetime import datetime, date
 import tkinter as tk
 from tkinter import messagebox, ttk
@@ -22,7 +24,7 @@ HEADER = [
 ]
 
 # =========================
-# DATE & PRINT LOGIC
+# DATE & WEB SCRAPING LOGIC
 # =========================
 def add_one_year_keep_day_month(d: date) -> date:
     """Add +1 year and keep day/month the same (Feb 29 -> Feb 28 if needed)."""
@@ -32,7 +34,7 @@ def add_one_year_keep_day_month(d: date) -> date:
         return date(d.year + 1, 2, 28)
 
 def generate_print_file(fields_data):
-    """Handles the parsing of scan text and creation of the CSV/DAT file."""
+    """Fetches Mfg Date from Inkanto website URL and writes BarTender print file."""
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     os.makedirs(WATCHED_FOLDER, exist_ok=True)
 
@@ -46,20 +48,41 @@ def generate_print_file(fields_data):
     print_filename = ""
     
     try:
-        if len(scan_text) < 8:
-            raise ValueError("Scan too short (< 8 characters).")
+        # Validate URL format
+        if not scan_text.lower().startswith(("http://", "https://")):
+            raise ValueError("Input is not a URL (expected https://... from the Inkanto QR code).")
 
-        tail8 = scan_text[-8:]   
-        yymmdd = tail8[:6]       
+        # Fetch HTML from Inkanto portal
+        req = urllib.request.Request(
+            scan_text,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
 
-        if not yymmdd.isdigit():
-            raise ValueError(f"Expected 6 digits in last-8 prefix, got '{yymmdd}' from the input '{tail8}'.")
+        # Parse Manufacturing Date from HTML response
+        m = re.search(
+            r'Manufacturing Date:\s*</span>\s*<span[^>]*class="specifications__value"[^>]*>\s*([0-9]{2}/[0-9]{2}/[0-9]{4})\s*</span>',
+            html,
+            flags=re.IGNORECASE | re.DOTALL
+        )
+        if not m:
+            raise ValueError("Manufacturing Date not found on website (HTML pattern not matched).")
 
-        yy = int(yymmdd[0:2])
-        mm = int(yymmdd[2:4])
-        dd = int(yymmdd[4:6])
+        manu_text = m.group(1)  # e.g., "05/03/2026"
 
-        manu = date(2000 + yy, mm, dd)
+        # Parse manufacturing date format (dd/mm/yyyy or mm/dd/yyyy fallback)
+        p1, p2, p3 = manu_text.split("/")
+        a, b, y = int(p1), int(p2), int(p3)
+
+        if a > 12:
+            dd, mm = a, b
+        elif b > 12:
+            dd, mm = b, a
+        else:
+            dd, mm = a, b
+
+        manu = date(y, mm, dd)
         exp = add_one_year_keep_day_month(manu)
 
         mundat_str = manu.strftime("%Y%m%d")
@@ -82,7 +105,7 @@ def generate_print_file(fields_data):
             w = csv.writer(f, delimiter=DELIMITER)
             w.writerow(HEADER)
             for _ in range(fields_data["copies"]):
-                w.writerow(row) 
+                w.writerow(row)
 
         os.replace(tmp_path, final_path)
 
@@ -118,11 +141,11 @@ def generate_print_file(fields_data):
 # =========================
 # GUI APP
 # =========================
-class KonishiGlueForm(tk.Tk):
+class TTRLabelForm(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Print Form - Konishi Glue Label")
-        self.geometry("500x650")
+        self.title("Print Form - Material Incoming Label (TTR)")
+        self.geometry("520x650")
         self.resizable(False, False)
         self.configure(bg="#f5f8fc")
 
@@ -143,7 +166,7 @@ class KonishiGlueForm(tk.Tk):
         header.pack_propagate(False)
         tk.Label(
             header,
-            text="Incoming Material - Konishi Glue",
+            text="Incoming Material - TTR Ribbon",
             font=("Segoe UI", 16, "bold"),
             bg=self.colors["navy"],
             fg="white"
@@ -162,20 +185,20 @@ class KonishiGlueForm(tk.Tk):
         form_frame.columnconfigure(0, weight=1, pad=10)
         form_frame.columnconfigure(1, weight=3, pad=10)
 
-        # Standard Fields (Readonly set for requested fields)
-        self.add_form_row(form_frame, 0, "Material No (MATNR):", "210838", "matnr", readonly=True)
-        self.add_form_row(form_frame, 1, "Description (KTXT):", "Glue_FB300ZW (Konishi)", "ktxt", readonly=True)
+        # Standard Fields (Identical to previous configuration)
+        self.add_form_row(form_frame, 0, "Material No (MATNR):", "212112", "matnr", readonly=True)
+        self.add_form_row(form_frame, 1, "Description (KTXT):", "Therm.Trans.Ribbon Armor AXR7+110mm_300m", "ktxt", readonly=True)
         
-        # WEDAT field defaults to today
+        # WEDAT field defaults to today utilizing tkcalendar 
         today = date.today()
         self.add_form_row(form_frame, 2, "Receipt Date (WEDAT):", today, "wedat", is_date=True)
         
         self.add_form_row(form_frame, 3, "PO Number (EBELN):", "7000000309", "ebeln")
         self.add_form_row(form_frame, 4, "PO Item (EBELP):", "0", "ebelp")
-        self.add_form_row(form_frame, 5, "Quantity (BSTMG):", "10", "bstmg")
+        self.add_form_row(form_frame, 5, "Quantity (BSTMG):", "1", "bstmg", readonly=True)
         self.add_form_row(form_frame, 6, "Unit (BSTME):", "PCS", "bstme", readonly=True)
-        self.add_form_row(form_frame, 7, "Storage Loc (LGORT):", "0028", "lgort", readonly=True)
-        self.add_form_row(form_frame, 8, "Location (SSNA):", "WH2-MAT-FEFO-R6", "ssna", readonly=True)
+        self.add_form_row(form_frame, 7, "Storage Loc (LGORT):", "0027", "lgort", readonly=True)
+        self.add_form_row(form_frame, 8, "Location (SSNA):", "WH2-MAT-FLOW-R5", "ssna", readonly=True)
         self.add_form_row(form_frame, 9, "Number of Copies:", "1", "copies", is_number=True)
 
         tk.Frame(form_frame, bg=self.colors["border"], height=1).grid(row=10, column=0, columnspan=2, sticky="ew", pady=10)
@@ -183,7 +206,7 @@ class KonishiGlueForm(tk.Tk):
         # Scan Input Field
         tk.Label(
             form_frame,
-            text="Scan QR Code:",
+            text="Scan Inkanto URL:",
             font=("Segoe UI", 11, "bold"),
             bg=self.colors["card"],
             fg=self.colors["blue_dark"],
@@ -195,7 +218,7 @@ class KonishiGlueForm(tk.Tk):
         self.scan_entry.grid(row=11, column=1, sticky="w", pady=10, padx=(5, 15))
         self.fields["scan_text"] = scan_var
         
-        # Bind the Enter key to automatically print when scanner finishes input
+        # Bind Enter key to trigger printing
         self.scan_entry.bind('<Return>', lambda event: self.execute_print())
         self.scan_entry.focus_set()
 
@@ -244,7 +267,6 @@ class KonishiGlueForm(tk.Tk):
         ).grid(row=row, column=0, sticky="e", pady=8, padx=(15, 5))
 
         if is_date:
-            # Set to a standard format with separators so the UI doesn't crash
             entry = DateEntry(parent, font=("Segoe UI", 10), width=26, date_pattern='dd/mm/yyyy')
             entry.set_date(default_val)
         else:
@@ -265,16 +287,14 @@ class KonishiGlueForm(tk.Tk):
             self.fields[key] = var
 
     def execute_print(self):
-        # Extract data from fields
         current_data = {}
         for key, var in self.fields.items():
             if isinstance(var, DateEntry):
-                # This pulls the date object and converts it to strictly YYYYMMDD for Bartender
+                # Formats to strictly YYYYMMDD 
                 current_data[key] = var.get_date().strftime("%Y%m%d")
             else:
                 current_data[key] = var.get().strip()
 
-        # Validate Copies
         try:
             current_data["copies"] = int(current_data["copies"])
             if current_data["copies"] < 1:
@@ -284,23 +304,22 @@ class KonishiGlueForm(tk.Tk):
             self.scan_entry.focus_set()
             return
 
-        # Validate Required Fields
+        # Ensure form is complete before printing
         if not all([current_data["matnr"], current_data["ktxt"], current_data["scan_text"]]):
-            messagebox.showwarning("Missing Data", "Please fill out all required fields and ensure a QR code is scanned.")
+            messagebox.showwarning("Missing Data", "Please fill out all required fields and ensure a QR URL is scanned.")
             self.scan_entry.focus_set()
             return
 
-        # Trigger file generation
+        # Trigger file generation and website scraping
         success, msg, mfg_date, exp_date = generate_print_file(current_data)
 
         if success:
-            # Clear scan text for the next item and keep focus
             self.fields["scan_text"].set("")
             self.scan_entry.focus_set()
         else:
-            messagebox.showerror("Print Failed", f"An error occurred while parsing or generating the print file:\n\n{msg}")
+            messagebox.showerror("Print Failed", f"An error occurred while fetching date or generating print file:\n\n{msg}")
             self.scan_entry.focus_set()
 
 if __name__ == "__main__":
-    app = KonishiGlueForm()
+    app = TTRLabelForm()
     app.mainloop()
