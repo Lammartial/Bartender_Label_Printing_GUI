@@ -21,6 +21,7 @@ def install_required_packages():
 
     required_packages = {
         "tkcalendar": "tkcalendar",
+        "pandas": "pandas"
     }
 
     # =========================
@@ -131,7 +132,7 @@ def install_required_packages():
 
     tk.Label(
         header_text,
-        text="Preparing application",
+        text="Preparing Label Printing System",
         font=("Segoe UI", 10),
         bg=colors["navy"],
         fg="#d6e4f5",
@@ -437,10 +438,10 @@ LABELS = [
     },
     {
         "no": 9,
-        "title": "Quality – Q\nLabel Code",
-        "description": "Prints quality control\nQ label codes for QA\ninspections.",
-        "script": "bartender_print-Q-label.py",
-        "image": "label_Qcode.png",
+        "title": "Quality – Q-Equipments\nLabel",
+        "description": "Prints quality control\nQ-Equipments labels\nfor QA inspections.",
+        "script": "bartender_print-Q-equipments-label_GUI.py",
+        "image": "label_Q_equipments.png",
     },
     {
         "no": 10,

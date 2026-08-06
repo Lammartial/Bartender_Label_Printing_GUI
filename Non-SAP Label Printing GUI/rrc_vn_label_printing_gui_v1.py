@@ -440,7 +440,7 @@ LABELS = [
         "no": 9,
         "title": "Quality – Q-Equipments\nLabel",
         "description": "Prints quality control\nQ-Equipments labels\nfor QA inspections.",
-        "script": "bartender_print-Q-equipments-label_GPT.py",
+        "script": "bartender_print-Q-equipments-label_GUI.py",
         "image": "label_Q_equipments.png",
     },
     {
