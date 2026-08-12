@@ -443,8 +443,15 @@ LABELS = [
         "script": "bartender_print-Q-equipments-label_GUI.py",
         "image": "label_Q_equipments.png",
     },
-    {
+        {
         "no": 10,
+        "title": "Quality – Fixture/Jig\nLabel",
+        "description": "Prints quality control\nFixture/Jig labels\nfor QA inspections.",
+        "script": "bartender_print-fixture-jig-label_GUI.py",
+        "image": "label_fixture_jig.png",
+    },
+    {
+        "no": 11,
         "title": "Quality – Waiting\nLabel",
         "description": "Label for products waiting\nfor QA/QC clearance or\nfurther testing.",
         "script": "bartender_print-waiting-label_GUI.py",
