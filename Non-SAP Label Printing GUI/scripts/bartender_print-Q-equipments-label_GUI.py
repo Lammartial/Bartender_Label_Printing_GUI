@@ -31,7 +31,6 @@ print("Loading Excel file...")
 df = pd.read_excel(
     SOURCE_FILE,
     sheet_name=SOURCE_SHEET,
-    header=1,
     dtype=str
 )
 
