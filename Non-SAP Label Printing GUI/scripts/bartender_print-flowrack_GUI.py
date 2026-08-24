@@ -164,7 +164,7 @@ class FlowRackForm(tk.Tk):
         self.add_form_row(form_frame, 0, "Material No (MATNR):", "", "matnr")
         self.add_form_row(form_frame, 1, "Description (KTXT):", "", "ktxt", readonly=True)
         self.add_form_row(form_frame, 2, "Location (SSNA):", "", "ssna", readonly=True)
-        self.add_form_row(form_frame, 3, "Storage Loc (LGORT):", "", "lgort", readonly=True)
+        self.add_form_row(form_frame, 3, "Storage Loc (LGORT):", "", "lgort")
         self.add_form_row(form_frame, 4, "Number of Copies:", "1", "copies", is_number=True)
 
         # Bind the MATNR field to the auto_fill logic
@@ -265,7 +265,14 @@ class FlowRackForm(tk.Tk):
 
         if success:
             messagebox.showinfo("Success", f"Print job sent successfully!\n\nDetails:\nMATNR: {matnr}\nCopies: {copies}")
-            self.destroy()  
+            # Clear the input fields so another label can be printed.
+            self.fields["matnr"].set("")
+            self.fields["ktxt"].set("")
+            self.fields["ssna"].set("")
+            self.fields["lgort"].set("")
+            self.fields["copies"].set("1")
+            # self.destroy()  
+
         else:
             messagebox.showerror("Print Failed", f"An error occurred while generating the print file:\n\n{msg}")
 
