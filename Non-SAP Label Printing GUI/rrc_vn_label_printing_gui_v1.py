@@ -21,7 +21,8 @@ def install_required_packages():
 
     required_packages = {
         "tkcalendar": "tkcalendar",
-        "pandas": "pandas"
+        "pandas": "pandas",
+        "openpyxl": "openpyxl"
     }
 
     # =========================
