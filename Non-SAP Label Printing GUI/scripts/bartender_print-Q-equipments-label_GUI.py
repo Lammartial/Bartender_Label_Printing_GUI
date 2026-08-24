@@ -34,8 +34,8 @@ df = pd.read_excel(
     dtype=str
 )
 
-# Replace NaN with empty string
-df = df.fillna("")
+# # Replace NaN with empty string
+# df = df.fillna("")
 
 print("Detected columns:")
 
@@ -108,14 +108,14 @@ df = df[
 df["QUALITY_EQUIPMENT_NO"] = (
     df["QUALITY_EQUIPMENT_NO"]
     .astype(str)
-    .replace(["nan", "NaN"], "")
+    # .replace(["nan", "NaN"], "")
     .str.strip()
 )
 
 df["INVENTORY_NUMBER"] = (
     df["INVENTORY_NUMBER"]
     .astype(str)
-    .replace(["nan", "NaN", "NA", "N/A"], "")
+    # .replace(["nan", "NaN", "NA", "N/A"], "")
     .str.strip()
 )
 
