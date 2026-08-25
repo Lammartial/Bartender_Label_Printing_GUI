@@ -31,7 +31,8 @@ print("Loading Excel file...")
 df = pd.read_excel(
     SOURCE_FILE,
     sheet_name=SOURCE_SHEET,
-    dtype=str
+    dtype=str,
+    keep_default_na=False
 )
 
 # Replace NaN with empty string
@@ -108,14 +109,12 @@ df = df[
 df["TOOL_NO"] = (
     df["TOOL_NO"]
     .astype(str)
-    .replace(["nan", "NaN"], "")
     .str.strip()
 )
 
 df["INVENTORY_NUMBER"] = (
     df["INVENTORY_NUMBER"]
     .astype(str)
-    .replace(["nan", "NaN", "NA", "N/A"], "")
     .str.strip()
 )
 
@@ -169,7 +168,7 @@ WATCHED_FOLDER = r"Z:"
 PRINT_FILE_EXT = "csv"                  
 DELIMITER = "\t"                        
 
-PRINTERNAME = "LBL_PRINTER_WH_VN"
+PRINTERNAME = "UDI_PRINTER_VN"
 LABELFILE = "Fixture-Jig Label_18mm x 38mm.BTW"
 LOG_FILE = r"C:\bt_watchedfolder_qr_print\qr_print_log.csv"
 
@@ -275,9 +274,6 @@ class Q_Tool_Menu(tk.Tk):
                         inventory = (
                             row.get("INVENTORY_NUMBER","").strip()
                         )
-
-                        if inventory.upper() == "NA":
-                            inventory = ""
 
                         db[tool_no] = {
                             "INVENTORY_NUMBER": inventory
