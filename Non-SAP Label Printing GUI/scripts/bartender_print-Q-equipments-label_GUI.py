@@ -31,7 +31,9 @@ print("Loading Excel file...")
 df = pd.read_excel(
     SOURCE_FILE,
     sheet_name=SOURCE_SHEET,
-    dtype=str
+    dtype=str,
+    keep_default_na=False
+
 )
 
 # # Replace NaN with empty string
@@ -276,8 +278,8 @@ class Q_Equipment_Menu(tk.Tk):
                             row.get("INVENTORY_NUMBER","").strip()
                         )
 
-                        if inventory.upper() == "NA":
-                            inventory = ""
+                        # if inventory.upper() == "NA":
+                        #     inventory = ""
 
                         db[q_id] = {
                             "INVENTORY_NUMBER": inventory
