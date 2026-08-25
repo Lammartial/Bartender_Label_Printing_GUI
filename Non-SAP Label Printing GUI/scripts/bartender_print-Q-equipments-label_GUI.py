@@ -37,7 +37,7 @@ df = pd.read_excel(
 )
 
 # # Replace NaN with empty string
-# df = df.fillna("")
+df = df.fillna("")
 
 print("Detected columns:")
 
