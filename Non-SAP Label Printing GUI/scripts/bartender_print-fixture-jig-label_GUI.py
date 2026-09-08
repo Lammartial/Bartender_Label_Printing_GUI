@@ -36,11 +36,12 @@ print("Loading Excel file...")
 df = pd.read_excel(
     SOURCE_FILE,
     sheet_name=SOURCE_SHEET,
-    dtype=str
+    dtype=str,
+    keep_default_na=False
 )
 
 # Replace NaN with empty string
-df = df.fillna("")
+# df = df.fillna("")
 
 print("Detected columns:")
 
@@ -113,14 +114,12 @@ df = df[
 df["TOOL_NO"] = (
     df["TOOL_NO"]
     .astype(str)
-    .replace(["nan", "NaN"], "")
     .str.strip()
 )
 
 df["INVENTORY_NUMBER"] = (
     df["INVENTORY_NUMBER"]
     .astype(str)
-    .replace(["nan", "NaN", "NA", "N/A"], "")
     .str.strip()
 )
 
@@ -280,9 +279,6 @@ class Q_Tool_Menu(tk.Tk):
                         inventory = (
                             row.get("INVENTORY_NUMBER","").strip()
                         )
-
-                        if inventory.upper() == "NA":
-                            inventory = ""
 
                         db[tool_no] = {
                             "INVENTORY_NUMBER": inventory
