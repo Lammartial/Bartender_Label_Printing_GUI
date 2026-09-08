@@ -163,7 +163,7 @@ class FlowRackForm(tk.Tk):
         # Added 'readonly' argument to lock fields that are auto-populated
         self.add_form_row(form_frame, 0, "Material No (MATNR):", "", "matnr")
         self.add_form_row(form_frame, 1, "Description (KTXT):", "", "ktxt", readonly=True)
-        self.add_form_row(form_frame, 2, "Location (SSNA):", "", "ssna", readonly=True)
+        self.add_form_row(form_frame, 2, "Location (SSNA):", "", "ssna")
         self.add_form_row(form_frame, 3, "Storage Loc (LGORT):", "", "lgort")
         self.add_form_row(form_frame, 4, "Number of Copies:", "1", "copies", is_number=True)
 
