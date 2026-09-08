@@ -12,15 +12,20 @@ from pathlib import Path
 
 USER_HOME = os.path.expanduser("~")
 
+# Set root directory relative to RRCVN Label Printing GUI.pyw location
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 SOURCE_FILE = Path(
     USER_HOME + r"\RRC power solutions\RRC VN - Documents\600_Quality\640_Q-Equipments\Q-Equipments-Overview.xlsx"
 )
 
 SOURCE_SHEET = "Tool No Overview"
 
-OUTPUT_FILE = Path(
-    USER_HOME + r"\RRC power solutions\RRC VN - Documents\999_SHARE_VN\290_IT\Non-SAP Label Printing GUI\databases\Fixture-Jig_DB.csv"
-)
+# OUTPUT_FILE = Path(
+#     USER_HOME + r"\RRC power solutions\RRC VN - Documents\999_SHARE_VN\290_IT\Non-SAP Label Printing GUI\databases\Fixture-Jig_DB.csv"
+# )
+
+OUTPUT_FILE = BASE_DIR/"databases"/"Fixture-Jig_DB.csv"
 
 # ==========================================
 # LOAD EXCEL
@@ -61,7 +66,7 @@ for col in df.columns:
         .lower()
     )
 
-    if "tool" in col_text:
+    if "tool no" in col_text:
         tool_col = col
 
     if "inventory number" in col_text:
