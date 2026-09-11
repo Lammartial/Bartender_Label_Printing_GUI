@@ -221,7 +221,11 @@ class ShipperConsigneeForm(tk.Tk):
 
         if success:
             messagebox.showinfo("Success", f"Print job sent successfully!\n\nConsignee: {consignee}\nWeight: {weight} {unit}\nCopies: {copies}")
-            self.destroy()
+            # self.destroy()
+
+            # Keep the GUI open after printing.
+            # Reset copies to 1 for the next print job.
+            self.fields["copies"].set("1")
         else:
             messagebox.showerror("Print Failed", f"An error occurred while generating the print file:\n\n{msg}")
 
