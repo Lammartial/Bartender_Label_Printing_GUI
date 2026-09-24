@@ -2,11 +2,16 @@ import os
 import csv
 import re
 import urllib.request
+import serial
+import threading
+import queue
+from serial.tools import list_ports
 from datetime import datetime, date
 import tkinter as tk
 from tkinter import messagebox, ttk
 from tkcalendar import DateEntry
 
+# pyserial is required for Zebra DS22 COM-port scanning.
 # =========================
 # CONFIG 
 # =========================
@@ -14,9 +19,28 @@ WATCHED_FOLDER = r"Z:"
 PRINT_FILE_EXT = "csv"                    
 DELIMITER = "\t"                          
 
-PRINTERNAME = "LBL_PRINTER_WH_VN"
+PRINTERNAME = "UDI_PRINTER_VN"
 LABELFILE   = "Incoming_material_label.BTW"
 LOG_FILE = r"C:\bt_watchedfolder_qr_print\qr_print_log.csv"
+
+# =========================
+# ZEBRA DS22 SERIAL SCANNER
+# =========================
+# The scanner COM port is detected automatically.
+# No fixed COM number is required.
+SCANNER_BAUDRATE = 9600
+SCANNER_TIMEOUT = 1
+SCANNER_READ_INTERVAL = 0.05
+SCANNER_RECONNECT_DELAY = 3.0
+
+# Zebra Technologies USB vendor ID.
+# This is used when Windows exposes the scanner/USB interface as Zebra.
+ZEBRA_VENDOR_ID = 0x05E0
+ZEBRA_KEYWORDS = (
+    "zebra",
+    "symbol",
+    "barcode scanner",
+)
 
 HEADER = [
     "PRINTERNAME", "LABELFILE", "MATNR", "KTXT", "WEDAT", "EBELN", "EBELP",
@@ -32,6 +56,66 @@ def add_one_year_keep_day_month(d: date) -> date:
         return date(d.year + 1, d.month, d.day)
     except ValueError:
         return date(d.year + 1, 2, 28)
+
+
+def detect_scanner_port():
+    """
+    Automatically detect the Zebra DS22 COM port.
+
+    Detection order:
+    1. Zebra USB vendor ID (05E0)
+    2. Zebra/Symbol/Barcode Scanner keywords in Windows port information
+    3. If only one COM port exists, use that port as a fallback
+
+    Returns:
+        str | None: Detected COM port such as 'COM18', or None.
+    """
+    try:
+        ports = list(list_ports.comports())
+    except Exception:
+        return None
+
+    if not ports:
+        return None
+
+    # Prefer a clearly identified Zebra scanner/USB serial device.
+    zebra_candidates = []
+
+    for port in ports:
+        device = getattr(port, "device", "") or ""
+        description = getattr(port, "description", "") or ""
+        manufacturer = getattr(port, "manufacturer", "") or ""
+        product = getattr(port, "product", "") or ""
+        hwid = getattr(port, "hwid", "") or ""
+        vid = getattr(port, "vid", None)
+
+        combined = " ".join([
+            str(device),
+            str(description),
+            str(manufacturer),
+            str(product),
+            str(hwid),
+        ]).lower()
+
+        is_zebra = (
+            vid == ZEBRA_VENDOR_ID
+            or any(keyword in combined for keyword in ZEBRA_KEYWORDS)
+        )
+
+        if is_zebra:
+            zebra_candidates.append(device)
+
+    if zebra_candidates:
+        return zebra_candidates[0]
+
+    # Safe fallback:
+    # If there is exactly one COM port, assume it is the scanner.
+    if len(ports) == 1:
+        return ports[0].device
+
+    # Multiple unidentified COM ports:
+    # Do not randomly connect to one.
+    return None
 
 def generate_print_file(fields_data):
     """Fetches Mfg Date from Inkanto website URL and writes BarTender print file."""
@@ -160,6 +244,23 @@ class TTRLabelForm(tk.Tk):
 
         self.build_ui()
 
+        # =========================
+        # SCANNER COMMUNICATION
+        # =========================
+        self.scanner_queue = queue.Queue()
+        self.scanner_stop_event = threading.Event()
+        self.scanner_serial = None
+        self.scanner_port = None
+
+        # Start Zebra DS22 scanner listener
+        self.start_scanner()
+
+        # Process scanner messages safely on the Tkinter main thread
+        self.after(50, self.process_scanner_queue)
+
+        # Cleanly close scanner when the user closes the GUI
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
     def build_ui(self):
         header = tk.Frame(self, bg=self.colors["navy"], height=60)
         header.pack(fill="x")
@@ -171,6 +272,23 @@ class TTRLabelForm(tk.Tk):
             bg=self.colors["navy"],
             fg="white"
         ).pack(side="left", padx=20, pady=15)
+
+        # Scanner connection status
+        self.scanner_status_var = tk.StringVar(
+            value="Scanner: Detecting..."
+        )
+
+        tk.Label(
+            header,
+            textvariable=self.scanner_status_var,
+            font=("Segoe UI", 9),
+            bg=self.colors["navy"],
+            fg="#d8e8ff"
+        ).pack(
+            side="right",
+            padx=20,
+            pady=20
+        )
 
         form_frame = tk.Frame(
             self, 
@@ -229,7 +347,7 @@ class TTRLabelForm(tk.Tk):
         cancel_btn = tk.Button(
             btn_frame,
             text="Cancel",
-            command=self.destroy,
+            command=self.on_close,
             font=("Segoe UI", 10),
             bg="#e2e6eb",
             fg="#333333",
@@ -285,6 +403,214 @@ class TTRLabelForm(tk.Tk):
             self.fields[key] = entry
         else:
             self.fields[key] = var
+
+
+    # =========================
+    # ZEBRA DS22 SCANNER
+    # =========================
+    def start_scanner(self):
+        """Start the Zebra DS22 serial scanner listener in a background thread."""
+
+        self.scanner_thread = threading.Thread(
+            target=self.scanner_worker,
+            daemon=True
+        )
+
+        self.scanner_thread.start()
+
+    def scanner_worker(self):
+        """
+        Continuously detect and read QR/barcode data from the Zebra DS22.
+
+        Communication:
+        9600 baud
+        8 data bits
+        No parity
+        1 stop bit
+
+        Tkinter is not touched from this worker thread.
+        Scanner messages are placed into self.scanner_queue instead.
+        """
+
+        while not self.scanner_stop_event.is_set():
+
+            ser = None
+
+            try:
+                # Detect the COM port dynamically every time we reconnect.
+                detected_port = detect_scanner_port()
+
+                if not detected_port:
+                    self.scanner_queue.put(
+                        (
+                            "status",
+                            "Scanner: COM port not detected - retrying..."
+                        )
+                    )
+
+                    self.scanner_stop_event.wait(
+                        SCANNER_RECONNECT_DELAY
+                    )
+                    continue
+
+                # Connect to the detected scanner
+                ser = serial.Serial(
+                    port=detected_port,
+                    baudrate=SCANNER_BAUDRATE,
+                    bytesize=serial.EIGHTBITS,
+                    parity=serial.PARITY_NONE,
+                    stopbits=serial.STOPBITS_ONE,
+                    timeout=SCANNER_TIMEOUT
+                )
+
+                self.scanner_serial = ser
+                self.scanner_port = detected_port
+
+                # Remove anything left in the receive buffer
+                ser.reset_input_buffer()
+
+                self.scanner_queue.put(
+                    (
+                        "status",
+                        f"Scanner: Connected ({detected_port})"
+                    )
+                )
+
+                # =========================
+                # READ SCANNER DATA
+                # =========================
+                while not self.scanner_stop_event.is_set():
+
+                    if ser.in_waiting > 0:
+
+                        raw_data = ser.readline()
+
+                        scanned_data = raw_data.decode(
+                            "utf-8",
+                            errors="ignore"
+                        ).strip()
+
+                        if scanned_data:
+                            self.scanner_queue.put(
+                                (
+                                    "scan",
+                                    scanned_data
+                                )
+                            )
+
+                    # Avoid unnecessary CPU usage
+                    self.scanner_stop_event.wait(
+                        SCANNER_READ_INTERVAL
+                    )
+
+            except serial.SerialException:
+                self.scanner_serial = None
+
+                if self.scanner_port:
+                    status_text = (
+                        f"Scanner: Disconnected ({self.scanner_port}) - retrying..."
+                    )
+                else:
+                    status_text = (
+                        "Scanner: Serial connection failed - retrying..."
+                    )
+
+                self.scanner_port = None
+
+                self.scanner_queue.put(
+                    (
+                        "status",
+                        status_text
+                    )
+                )
+
+                self.scanner_stop_event.wait(
+                    SCANNER_RECONNECT_DELAY
+                )
+
+            except Exception as e:
+                self.scanner_serial = None
+                self.scanner_port = None
+
+                self.scanner_queue.put(
+                    (
+                        "status",
+                        f"Scanner error: {e}"
+                    )
+                )
+
+                self.scanner_stop_event.wait(
+                    SCANNER_RECONNECT_DELAY
+                )
+
+            finally:
+                if ser is not None:
+                    try:
+                        if ser.is_open:
+                            ser.close()
+                    except Exception:
+                        pass
+
+                self.scanner_serial = None
+
+    def process_scanner_queue(self):
+        """
+        Process scanner messages from the worker thread on the Tkinter
+        main thread so GUI widgets remain thread-safe.
+        """
+
+        try:
+            while True:
+
+                message_type, value = self.scanner_queue.get_nowait()
+
+                # =========================
+                # SCANNER STATUS
+                # =========================
+                if message_type == "status":
+
+                    if hasattr(self, "scanner_status_var"):
+                        self.scanner_status_var.set(value)
+
+                # =========================
+                # SCANNED QR/BARCODE
+                # =========================
+                elif message_type == "scan":
+
+                    # Put scanned URL into the existing scan field
+                    self.fields["scan_text"].set(value)
+
+                    # Keep scanner input focused
+                    self.scan_entry.focus_set()
+
+                    # Automatically execute the existing print routine
+                    self.execute_print()
+
+        except queue.Empty:
+            pass
+
+        # Continue monitoring the scanner queue
+        if not self.scanner_stop_event.is_set():
+
+            self.after(
+                50,
+                self.process_scanner_queue
+            )
+
+    def on_close(self):
+        """Stop the scanner thread and close the GUI cleanly."""
+
+        self.scanner_stop_event.set()
+
+        if self.scanner_serial is not None:
+
+            try:
+                if self.scanner_serial.is_open:
+                    self.scanner_serial.close()
+            except Exception:
+                pass
+
+        self.destroy()
 
     def execute_print(self):
         current_data = {}
